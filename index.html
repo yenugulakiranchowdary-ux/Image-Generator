@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesignFrame - AI Powered Creative Suite</title>
+    <style>
+       
+        :root {
+            --bg-dark: #0f172a;
+            --sidebar-bg: #1e293b;
+            --border-color: #334155;
+            --primary-blue: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            width: 300px;
+            height: 100vh;
+            padding: 24px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .logo-section h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        .logo-section p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Form Elements */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        textarea {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            color: white;
+            font-size: 14px;
+            height: 100px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary-blue);
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: all 0.2s;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #334155;
+            color: white;
+            border: 1px solid #475569;
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .btn-outline-red {
+            border: 1px solid #7f1d1d;
+            color: #f87171;
+            background: transparent;
+        }
+
+        .btn-outline-red:hover {
+            background: #450a0a;
+        }
+
+        .btn-indigo {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        .btn-indigo:hover {
+            background-color: #4338ca;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* Range and Color Inputs */
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="color"] {
+            width: 48px;
+            height: 32px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary-blue);
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-dark);
+            position: relative;
+        }
+
+        #main-canvas {
+            width: 600px;
+            height: 450px;
+            background-color: white;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .draggable {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        /* Overlays */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(30, 41, 59, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .spinner {
+            border: 4px solid rgba(59, 130, 246, 0.1);
+            border-left-color: var(--primary-blue);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #error-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        .footer-nav {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="error-toast"></div>
+
+    <div class="sidebar">
+        <div class="logo-section">
+            <h1>DesignFrame</h1>
+            <p>AI Creative Suite</p>
+        </div>
+
+        <div class="control-group">
+            <label class="label">AI Image Generator</label>
+            <textarea id="imagePrompt" placeholder="A futuristic city in the clouds..."></textarea>
+            <button id="generateBtn" class="btn-primary">Generate Image</button>
+        </div>
+
+        <div class="control-group">
+            <label class="label">Elements</label>
+            <div class="grid-2">
+                <button onclick="addShape('square')" class="btn-secondary">Square</button>
+                <button onclick="addShape('circle')" class="btn-secondary">Circle</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="label">Background Color</label>
+            <div class="input-row">
+                <input type="color" id="bgColor" value="#ffffff">
+                <span id="colorHex" style="font-size: 11px; font-family: monospace;">#FFFFFF</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="label">Corner Roundness</label>
+            <input type="range" id="roundness" min="0" max="100" value="8">
+        </div>
+
+        <div class="footer-nav">
+            <button onclick="clearCanvas()" class="btn-outline-red">Clear Canvas</button>
+            <button onclick="downloadFrame()" class="btn-indigo">Download Frame</button>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <div id="main-canvas">
+            <div id="loading" class="loading-overlay" style="display: none;">
+                <div class="spinner"></div>
+                <p style="font-weight: 500;">AI Engine Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="exportCanvas" width="600" height="450" style="display:none;"></canvas>
+
+    <script>
+        const apiKey = "sk-YcfgKvChsNWDtridVAKUDEIpKrjWh1wbKzuixU4WTARKTpWz"; // Replace with your actual API key
+        const canvas = document.getElementById('main-canvas');
+        const loading = document.getElementById('loading');
+        const bgColorPicker = document.getElementById('bgColor');
+        const colorHex = document.getElementById('colorHex');
+        const roundnessSlider = document.getElementById('roundness');
+        const imagePrompt = document.getElementById('imagePrompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const toast = document.getElementById('error-toast');
+
+        let isDragging = false;
+        let activeElement = null;
+        let offset = { x: 0, y: 0 };
+
+        const randomColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f43f5e'];
+
+        function showError(msg) {
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        bgColorPicker.addEventListener('input', (e) => {
+            canvas.style.backgroundColor = e.target.value;
+            colorHex.innerText = e.target.value.toUpperCase();
+        });
+
+        roundnessSlider.addEventListener('input', (e) => {
+            canvas.style.borderRadius = `${e.target.value}px`;
+        });
+
+        async function generateImage(prompt) {
+            loading.style.display = 'flex';
+            generateBtn.disabled = true;
+            generateBtn.innerText = "Generating...";
+
+           const API_URL ="https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2";
+                            
+            const payload = {
+                instances: { prompt: prompt },
+                parameters: { sampleCount: 1 }
+            };
+
+            let retries = 0;
+            const maxRetries = 5;
+
+            while (retries <= maxRetries) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error('API Error');
+
+                    const result = await response.json();
+                    
+                    if (result.predictions && result.predictions[0]) {
+                        const base64Data = result.predictions[0].bytesBase64Encoded;
+                        addImageToCanvas(`data:image/png;base64,${base64Data}`);
+                        break; 
+                    } else {
+                        throw new Error('No content in prediction');
+                    }
+
+                } catch (error) {
+                    if (retries === maxRetries) {
+                        showError("Safety filter or system busy. Try a different prompt.");
+                    }
+                    const delay = Math.pow(2, retries) * 1000;
+                    await new Promise(res => setTimeout(res, delay));
+                    retries++;
+                }
+            }
+
+            loading.style.display = 'none';
+            generateBtn.disabled = false;
+            generateBtn.innerText = "Generate Image";
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const prompt = imagePrompt.value.trim();
+            if (prompt) generateImage(prompt);
+            else showError("Please enter a description first.");
+        });
+
+        function addImageToCanvas(src) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = 'draggable';
+            img.style.width = '240px';
+            img.style.top = '105px';
+            img.style.left = '180px';
+            img.style.borderRadius = '8px';
+            img.addEventListener('mousedown', startDragging);
+            canvas.appendChild(img);
+        }
+
+        function addShape(type) {
+            const shape = document.createElement('div');
+            shape.className = 'draggable';
+            shape.style.width = '100px';
+            shape.style.height = '100px';
+            shape.style.top = '175px';
+            shape.style.left = '250px';
+            shape.style.backgroundColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+            shape.style.color = 'white';
+            shape.style.fontSize = '12px';
+            shape.style.fontWeight = 'bold';
+            shape.innerText = type.toUpperCase();
+            
+            if (type === 'circle') shape.style.borderRadius = '50%';
+            else shape.style.borderRadius = '8px';
+
+            shape.addEventListener('mousedown', startDragging);
+            canvas.appendChild(shape);
+        }
+
+        function startDragging(e) {
+            isDragging = true;
+            activeElement = e.target;
+            const rect = activeElement.getBoundingClientRect();
+            offset.x = e.clientX - rect.left;
+            offset.y = e.clientY - rect.top;
+            canvas.appendChild(activeElement);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging || !activeElement) return;
+            const canvasRect = canvas.getBoundingClientRect();
+            let x = e.clientX - canvasRect.left - offset.x;
+            let y = e.clientY - canvasRect.top - offset.y;
+            activeElement.style.left = `${x}px`;
+            activeElement.style.top = `${y}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            activeElement = null;
+        });
+
+        function clearCanvas() {
+            const elements = canvas.querySelectorAll('.draggable');
+            elements.forEach(el => el.remove());
+            canvas.style.backgroundColor = 'white';
+            bgColorPicker.value = '#ffffff';
+            colorHex.innerText = '#FFFFFF';
+        }
+
+        function downloadFrame() {
+            const exportCanvas = document.getElementById('exportCanvas');
+            const ctx = exportCanvas.getContext('2d');
+            const canvasRect = canvas.getBoundingClientRect();
+
+            ctx.fillStyle = canvas.style.backgroundColor || 'white';
+            ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+            const elements = canvas.querySelectorAll('.draggable');
+            elements.forEach(el => {
+                const elRect = el.getBoundingClientRect();
+                const x = elRect.left - canvasRect.left;
+                const y = elRect.top - canvasRect.top;
+
+                if (el.tagName === 'IMG') {
+                    ctx.drawImage(el, x, y, el.offsetWidth, el.offsetHeight);
+                } else {
+                    ctx.fillStyle = el.style.backgroundColor;
+                    if (el.style.borderRadius === '50%') {
+                        ctx.beginPath();
+                        ctx.arc(x + el.offsetWidth/2, y + el.offsetHeight/2, el.offsetWidth/2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(x, y, el.offsetWidth, el.offsetHeight);
+                    }
+                }
+            });
+
+            const link = document.createElement('a');
+            link.download = 'artwork.png';
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
